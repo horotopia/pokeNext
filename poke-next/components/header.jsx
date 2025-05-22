@@ -2,70 +2,67 @@
 import { useState, useEffect } from "react";
 import { usePokemonContext } from "../contexts/PokemonContext";
 import { useRouter } from "next/navigation";
-import PokemonCard from "./PokemonCard";
+import { getPokemonsByType, getTypes, getPokemons } from "@/api/pokemons";
 
 export default function HomeHeader() {
   const [search, setSearch] = useState("");
   const [type, setType] = useState("");
   const [types, setTypes] = useState([]);
   const { pokemons, setPokemons } = usePokemonContext();
-  const [filtered, setFiltered] = useState([]);
-  const router = useRouter();
 
   useEffect(() => {
-    const fetchTypes = async () => {
-      try {
-        const res = await fetch("https://nestjs-pokedex-api.vercel.app/types");
-        const data = await res.json();
-        setTypes(Array.isArray(data) ? data : data.results);
-      } catch (e) {
-        setTypes([]);
+    const fetchData = async () => {
+      if (localStorage.getItem("types")) {
+        const typesFromStorage = JSON.parse(localStorage.getItem("types"));
+        setTypes(typesFromStorage);
+      } else {
+        const types = await getTypes();
+        localStorage.setItem("types", JSON.stringify(types));
       }
     };
-    fetchTypes();
+    
+    fetchData();
   }, []);
 
   useEffect(() => {
     if (!type) return;
+    console.log(type);
     const fetchByType = async () => {
-      try {
-        const res = await fetch(`https://nestjs-pokedex-api.vercel.app/pokemons?types=${encodeURIComponent(type)}`);
-        const data = await res.json();
-        const pokemonsArray = Array.isArray(data) ? data : data.results;
-        setFiltered(pokemonsArray || []);
-      } catch (e) {
-        setFiltered([]);
+      if (type === "0") {
+        const pokemons = await getPokemons(1,50);
+        setPokemons(pokemons);
+        return;
       }
+      const pokemonByType = await getPokemonsByType(type);
+      if (!pokemonByType || pokemonByType.length === 0) {
+        setPokemons([]);
+        return;
+      }
+      setPokemons(pokemonByType);
     };
     fetchByType();
   }, [type]);
 
   useEffect(() => {
-    let result = pokemons;
-    if (search) {
-      result = result.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
-    }
-    setFiltered(result);
-  }, [search, pokemons]);
-
-  useEffect(() => {
     if (!search) return;
     const fetchByName = async () => {
-      try {
-        const res = await fetch(`https://nestjs-pokedex-api.vercel.app/pokemons?name=${encodeURIComponent(search)}`);
-        const data = await res.json();
-        const pokemonsArray = Array.isArray(data) ? data : data.results;
-        setFiltered(pokemonsArray || []);
-      } catch (e) {
-        setFiltered([]);
+      // if (search.length === 0) {
+      //   setPokemons(pokemons);
+      //   return;
+      // }
+      const pokemonByName = await getPokemonsByName(search);
+      if (!pokemonByName || pokemonByName.length === 0) {
+        setPokemons([]);
+        return;
       }
+      setPokemons(pokemonByName);
     };
     fetchByName();
   }, [search]);
 
   useEffect(() => {
-    setPokemons(filtered.length ? filtered : pokemons);
-  }, [filtered]);
+    setPokemons(search.length ? search : pokemons);
+  }, [search]);
 
   return (
     <>
@@ -82,23 +79,12 @@ export default function HomeHeader() {
           onChange={(e) => setType(e.target.value)}
           className="border rounded px-3 py-2"
         >
-          <option value="">Tous les types</option>
+          <option value="0">Tous les types</option>
           {types && types.map((t) => (
-            <option key={t.name} value={t.name}>{t.name}</option>
+            <option key={t.name} value={t.id}>{t.name}</option>
           ))}
         </select>
       </header>
-      <ul className="flex flex-row flex-wrap gap-4 justify-center">
-        {filtered.map((pokemon) => (
-          <li
-            key={pokemon.id}
-            className="cursor-pointer"
-            onClick={() => router.push(`/pokemon/${pokemon.id}`)}
-          >
-            <PokemonCard pokemon={pokemon} />
-          </li>
-        ))}
-      </ul>
     </>
   );
 }
