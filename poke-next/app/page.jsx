@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { PokemonContext } from "@/contexts/PokemonContext";
-import PokemonList from "../components/fetchAPI";
+import { FetchParamsProvider } from "@/contexts/FetchParamsContext";
+import PokemonList from "../components/list";
 import HomeHeader from "../components/header";
 
 export default function Home() {
@@ -11,8 +12,10 @@ export default function Home() {
   return (
     <>
       <PokemonContext.Provider value={{ pokemons, setPokemons }}>
-        <HomeHeader />
-        <PokemonList />
+        <FetchParamsProvider>
+          <HomeHeader />
+          <PokemonList />
+        </FetchParamsProvider>
       </PokemonContext.Provider>
     </>
   );

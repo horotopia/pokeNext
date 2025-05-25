@@ -1,14 +1,17 @@
 "use client";
 import { useState, useEffect } from "react";
 import { usePokemonContext } from "../contexts/PokemonContext";
+import { useFetchParams } from "../contexts/FetchParamsContext";
 import { useRouter } from "next/navigation";
-import { getPokemonsByType, getTypes, getPokemons } from "@/api/pokemons";
+import { getPokemonsByType, getTypes, getPokemons, getPokemonsByName } from "@/api/pokemons";
+import Logo from "./Logo";
 
 export default function HomeHeader() {
   const [search, setSearch] = useState("");
   const [type, setType] = useState("");
   const [types, setTypes] = useState([]);
   const { pokemons, setPokemons } = usePokemonContext();
+  const { page, setPage, limit, setLimit } = useFetchParams();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,10 +29,9 @@ export default function HomeHeader() {
 
   useEffect(() => {
     if (!type) return;
-    console.log(type);
-    const fetchByType = async () => {
+    console.log(type);    const fetchByType = async () => {
       if (type === "0") {
-        const pokemons = await getPokemons(1,50);
+        const pokemons = await getPokemons(page, limit);
         setPokemons(pokemons);
         return;
       }
@@ -42,37 +44,46 @@ export default function HomeHeader() {
     };
     fetchByType();
   }, [type]);
-
   useEffect(() => {
     if (!search) return;
     const fetchByName = async () => {
-      // if (search.length === 0) {
-      //   setPokemons(pokemons);
-      //   return;
-      // }
-      const pokemonByName = await getPokemonsByName(search);
-      if (!pokemonByName || pokemonByName.length === 0) {
+      const pokemonsByName = await getPokemonsByName(search);
+      if (!pokemonsByName || !Array.isArray(pokemonsByName) || pokemonsByName.length === 0) {
         setPokemons([]);
         return;
       }
-      setPokemons(pokemonByName);
+      setPokemons(pokemonsByName);
     };
     fetchByName();
   }, [search]);
-
-  useEffect(() => {
-    setPokemons(search.length ? search : pokemons);
-  }, [search]);
-
   return (
     <>
       <header className="bg-white shadow p-4 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <Logo onClick={() => {
+          setType("");
+          setSearch("");
+          setPage(1);
+          setLimit(50);
+          router.push("/");
+        }} />        
+        <p>{pokemons.length}</p>
+        
         <input
           type="text"
           placeholder="Rechercher par nom"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="border rounded px-3 py-2"
+        />
+        <input
+          type="number"
+          min="1"
+          max="100"
+          placeholder="Limite par page"
+          value={limit}
+          onChange={(e) => setLimit(parseInt(e.target.value))}
+          className="border rounded px-3 py-2 w-32"
+          title="limite"
         />
         <select
           value={type}

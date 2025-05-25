@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
-import PokemonCard from "@/components/PokemonCard";
+import PokemonCard from "@/components/card";
 import HomeHeader from "@/components/header";
 
 export default function PokemonPage({ params }) {
@@ -22,7 +22,8 @@ export default function PokemonPage({ params }) {
         console.error(e);
       } finally {
         setLoading(false);
-      }    };
+      }
+    };
     fetchPokemon();
   }, [unwrappedParams.id]);
 

@@ -21,7 +21,7 @@ export const getPokemonsByType = async (typeId) => {
   return data;
 };
 
-export const getPokemonByName = async (name) => {
+export const getPokemonsByName = async (name) => {
   console.log("Fetching pokemon by name...");
   const response = await fetch(`${API_URL}pokemons?name=${name}`);
   const data = await response.json();

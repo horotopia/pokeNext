@@ -1,13 +1,13 @@
 "use client";
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { PokemonContext } from "../contexts/PokemonContext";
+import { useFetchParams } from "../contexts/FetchParamsContext";
 import { getPokemons } from "../api/pokemons";
 
 export default function PokemonList() {
   const { pokemons, setPokemons } = useContext(PokemonContext);
+  const { page, setPage, limit } = useFetchParams();
   const [loading, setLoading] = useState(true);
-  const limit = 50;
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const isFetching = useRef(false);
   const fetchPokemons = async (page) => {
@@ -69,12 +69,10 @@ export default function PokemonList() {
     Sol: "bg-[#E0C068] text-gray-700",
     Glace: "bg-[#98D8D8] text-gray-200",
     Dragon: "bg-[#7038F8] text-gray-200",
-  };
-
-  return (
+  };  return (
     <>
       <ul className="flex flex-row flex-wrap gap-4 justify-center">
-        {pokemons.map((pokemon) => (
+        {Array.isArray(pokemons) ? pokemons.map((pokemon) => (
           <li key={pokemon.id} 
           className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center w-64 border hover:scale-105 transition-transform"
           onClick={() => window.location.href = `/pokemon/${pokemon.id}`}
@@ -84,7 +82,8 @@ export default function PokemonList() {
             {pokemon.image && (
               <img src={pokemon.image} alt={pokemon.name} className="w-24 h-24 object-contain mb-2" />
             )}
-            {pokemon.types && (              <div className="flex gap-2">
+            {pokemon.types && (              
+              <div className="flex gap-2">
                 {pokemon.types.map((type, index) => (
                   <div key={`${pokemon.id}-${type.name}-${index}`} className={`${typeColors[type.name]} text-gray-200 rounded-full px-3 py-1 text-sm font-semibold flex items-center gap-1`} title={`Type: ${type.name}`}>
                     <img
@@ -100,7 +99,7 @@ export default function PokemonList() {
               </div>
             )}
           </li>
-        ))}
+        )) : <li className="text-center my-4">No Pokémon found</li>}
       </ul>
       {loading && <div className="text-center my-4">Chargement...</div>}
       {!hasMore && <div className="text-center my-4">Fin de la liste</div>}
